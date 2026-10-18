@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>داش بورد المنجزات الشهرية</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+:root{--font-anthropic-sans:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;--font-anthropic-serif:Georgia,"Times New Roman",serif;
+--color-fg:#1E2836;--color-fg-muted:#5B6472;--color-bg:#FFFFFF;--color-panel:#FFFFFF;--color-border-line:#E2DDD0;--color-bad:#C0392B;
+--cds-gap-md:16px;--cds-gap-lg:24px;--cds-pad-lg:20px;--cds-pad-xs:4px;--cds-pad-sm:8px;--cds-radius:14px;
+--cds-font-size-caption:13px;--cds-font-size-body:15px;--cds-font-size-heading:18px;--cds-font-weight-medium:600;
+--cds-surface-popover:#fff;--cds-border:#D9D3C3;--cds-shadow-popover:0 4px 14px rgba(0,0,0,.15);--cds-dur-slow:.3s}
+@media(prefers-color-scheme:dark){:root{--color-fg:#F3F0E7;--color-fg-muted:#A9B0BC;--color-bg:#141B26;--color-panel:#1C2533;--color-border-line:#2E3B4F;--cds-surface-popover:#1C2533;--cds-border:#3A4A62}}
+body{margin:0;padding:24px 16px;background:var(--color-bg)}
+</style>
+</head>
+<body>
+<div dir="rtl" class="rp">
+<style>
+.rp{font-family:var(--font-anthropic-sans);color:var(--color-fg);max-width:1100px;margin-inline:auto;display:flex;flex-direction:column;gap:var(--cds-gap-lg)}
+.rp h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:2rem;margin:0;line-height:1.3}
+.rp .sub{margin:6px 0 0;color:var(--color-fg-muted);font-size:var(--cds-font-size-body);line-height:1.7}
+.rp .meta{display:flex;gap:8px 20px;flex-wrap:wrap;margin-top:10px;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.rp .card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg);min-width:0}
+.rp .card h2{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:0}
+.rp .note{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption);margin:2px 0 var(--cds-gap-md)}
+.rp .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,12rem),1fr));gap:var(--cds-gap-md)}
+.rp .tile .big{font-family:var(--font-anthropic-serif);font-size:2.4rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.rp .tile .lbl{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption);margin-top:6px}
+.rp .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr));gap:var(--cds-gap-md)}
+.rp .chart{min-height:300px;position:relative}
+.rp .cats{display:flex;flex-direction:column;gap:14px;min-height:300px}
+.rp .cat .row{display:flex;justify-content:space-between;gap:8px;font-size:var(--cds-font-size-body);margin-bottom:6px}
+.rp .cat .row b{font-weight:var(--cds-font-weight-medium);font-variant-numeric:tabular-nums}
+.rp .track{height:10px;border-radius:5px;background:var(--color-border-line);overflow:hidden}
+.rp .fill{height:100%;border-radius:5px}
+.rp .tools{display:flex;gap:8px;margin-bottom:var(--cds-gap-md)}
+.rp input.q{font:inherit;font-size:var(--cds-font-size-body);padding:6px 12px;border-radius:var(--cds-radius);border:1px solid var(--color-border-line);background:var(--color-bg);color:var(--color-fg);min-height:36px;flex:1}
+.rp .tw{max-height:480px;overflow:auto}
+.rp table{width:100%;border-collapse:collapse;font-size:var(--cds-font-size-body)}
+.rp th{position:sticky;top:0;background:var(--color-panel);text-align:right;font-weight:var(--cds-font-weight-medium);padding:8px 10px;border-bottom:1px solid var(--color-border-line);white-space:nowrap}
+.rp th button{all:unset;cursor:pointer}
+.rp td{padding:10px;border-bottom:1px solid var(--color-border-line);vertical-align:top}
+.rp td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.rp .tip{position:absolute;pointer-events:none;background:var(--cds-surface-popover);border:1px solid var(--cds-border);border-radius:var(--cds-radius);box-shadow:var(--cds-shadow-popover);padding:var(--cds-pad-xs) var(--cds-pad-sm);font-size:var(--cds-font-size-caption);display:none;z-index:2;max-width:18rem}
+.rp [data-dash-source-state=empty]{color:transparent}
+.rp [data-dash-source-state=refreshing]{opacity:.5;transition:opacity var(--cds-dur-slow)}
+.rp .fail{display:flex;align-items:center;justify-content:center;gap:6px;min-height:80px;color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.rp .fail:before{content:"";width:.375rem;height:.375rem;border-radius:50%;background:var(--color-bad)}
+</style>
+
+<header>
+<h1 data-source="info" data-field="report" data-where="department=المالية">—</h1>
+<p class="sub">أكبر بند في الشهر: <b data-source="summary" data-field="top_short">—</b>، ويمثل <b data-source="summary" data-field="top_share">—</b> من إجمالي مبلغ الدعم.</p>
+<div class="meta">
+<span>الإدارة: <span data-source="info" data-field="department" data-where="department=المالية">—</span></span>
+<span>التاريخ: <span dir="ltr" data-source="info" data-field="date" data-where="department=المالية">—</span></span>
+<span>اليوم: <span data-source="info" data-field="day" data-where="department=المالية">—</span></span>
+<span>معد التقرير: <span data-source="info" data-field="author" data-where="department=المالية">—</span></span>
+</div>
+</header>
+
+<section class="tiles">
+<div class="card tile"><div class="big" data-source="summary" data-field="support">—</div><div class="lbl">إجمالي مبلغ الدعم</div></div>
+<div class="card tile"><div class="big" data-source="summary" data-field="ops">—</div><div class="lbl">عدد الأعمال</div></div>
+<div class="card tile"><div class="big" data-source="summary" data-field="beneficiaries">—</div><div class="lbl">عدد المستفيدين أو العملاء</div></div>
+<div class="card tile"><div class="big" data-source="summary" data-field="items">—</div><div class="lbl">أعمال مميزة للنشر</div></div>
+</section>
+
+<section class="two">
+<div class="card"><h2>مبلغ الدعم لكل بند</h2><p class="note">مرتبة من الأكبر إلى الأصغر</p><div class="chart" id="rp-chart" data-source="items"></div></div>
+<div class="card"><h2>مبلغ الدعم حسب النوع</h2><p class="note">مجموع البنود في كل نوع</p><div class="cats" id="rp-cats" data-source="bycat"></div></div>
+</section>
+
+<section class="card">
+<h2>تفاصيل الأعمال المميزة للنشر</h2>
+<p class="note">اضغط على عنوان العمود للترتيب</p>
+<div class="tools"><input class="q" id="rp-q" type="search" placeholder="ابحث في الأعمال…" aria-label="بحث"></div>
+<div class="tw"><table id="rp-table" data-source="items" data-row-key="n">
+<thead><tr>
+<th data-field="n"><button type="button" data-k="n">م</button></th>
+<th data-field="title"><button type="button" data-k="title">أخبار الإدارة</button></th>
+<th data-field="ops"><button type="button" data-k="ops">عدد الأعمال</button></th>
+<th data-field="beneficiaries"><button type="button" data-k="beneficiaries">عدد المستفيدين</button></th>
+<th data-field="support"><button type="button" data-k="support">مبلغ الدعم</button></th>
+<th data-field="cost"><button type="button" data-k="cost">مبلغ التكلفة</button></th>
+</tr></thead><tbody></tbody></table></div>
+</section>
+</div>
+
+<script>
+
+var __raw={items:[
+{"n":1,"title":"التقرير المالي لإيرادات المعارض التعريفية – ATM – شهر 9","short":"إيرادات المعارض التعريفية","category":"إيرادات","ops":2709,"beneficiaries":0,"support":916309.00,"cost":null},
+{"n":2,"title":"مراجعة وسداد وإرفاق إيصال في برنامج أودو وترحيل معاملات إدارة التنمية شهر 9","short":"معاملات إدارة التنمية","category":"معاملات","ops":1102,"beneficiaries":1102,"support":0.00,"cost":null},
+{"n":3,"title":"عدد العمليات الواردة للجمعية من دعم المتبرعين والتي تمت مراجعتها وفوترتها خلال شهر 9","short":"عمليات دعم المتبرعين","category":"معاملات","ops":10550,"beneficiaries":null,"support":4549340.00,"cost":null},
+{"n":4,"title":"عدد العمليات الواردة عن طريق منصة الجمعية والتي تم اعتمادها خلال شهر 9","short":"عمليات منصة الجمعية","category":"معاملات","ops":5500,"beneficiaries":null,"support":1200000.00,"cost":null},
+{"n":5,"title":"بلغت مبيعات الخردة في المستودعات شهر 9","short":"مبيعات الخردة","category":"إيرادات","ops":null,"beneficiaries":null,"support":90363.00,"cost":null},
+{"n":6,"title":"الداعم عواض الثبيتي لمشروع الوقف 9","short":"الداعم عواض الثبيتي","category":"دعم مباشر","ops":null,"beneficiaries":null,"support":300000.00,"cost":null},
+{"n":7,"title":"الداعم خالد عبدالرحمن آل الشيخ لمشروع السلة الغذائية","short":"الداعم خالد آل الشيخ","category":"دعم مباشر","ops":null,"beneficiaries":null,"support":200000.00,"cost":null},
+{"n":8,"title":"الداعم أوقاف المربعي الخيري لصندوق المخصصات","short":"أوقاف المربعي الخيري","category":"دعم مباشر","ops":null,"beneficiaries":null,"support":293700.00,"cost":null},
+{"n":9,"title":"فواتير خدمات الجمعية لشهر 9","short":"فواتير خدمات الجمعية","category":"فواتير","ops":null,"beneficiaries":0,"support":4901.52,"cost":null}
+]
+,info:[{"report":"تقرير المنجزات الشهري","department":"المالية","date":"01/10/2026","day":"الخميس","author":"إبراهيم مبارك السفري"}]
+},__calcs={};
+window.dash={colors:['#2F6CAD','#B84E28','#1C7A71','#6D48A0','#C49A3C','#5B6472','#2B3A4F','#8A6A1E'],
+ calc:function(id,o){__calcs[id]=o},
+ data:function(id){if(__raw[id])return {status:'ok',data:__raw[id]};
+  var c=__calcs[id];if(!c)return {status:'missing',data:[]};
+  return {status:'ok',data:c.fn.apply(null,c.inputs.map(function(i){return dash.data(i).data}))}},
+ onData:function(fn){fn();var t;window.addEventListener('resize',function(){clearTimeout(t);t=setTimeout(fn,100)})}};
+
+(function(){
+var fmtN=d3.format(','),fmtM=d3.format(',.2f'),fmtP=d3.format('.1%');
+var compact=new Intl.NumberFormat('en',{notation:'compact',maximumFractionDigits:2});
+var CATC={'معاملات':0,'دعم مباشر':1,'إيرادات':2,'فواتير':3};
+var state={q:'',k:'support',dir:-1};
+var num=function(v){return v==null||v===''?null:+v};
+
+dash.calc('summary',{inputs:['items'],title:'ملخص التقرير',description:'إجمالي الدعم والأعمال والمستفيدين وأكبر بند',
+ fn:function(items){var s=0,o=0,b=0,top=items[0];items.forEach(function(r){s+=+r.support||0;o+=+r.ops||0;b+=+r.beneficiaries||0;if((+r.support||0)>(+top.support||0))top=r});
+  return [{support:s,ops:o,beneficiaries:b,items:items.length,top_short:top.short,top_share:s?(+top.support||0)/s:0}]}});
+
+dash.calc('bycat',{inputs:['items'],title:'الدعم حسب النوع',description:'مجموع مبلغ الدعم لكل نوع من البنود',
+ fn:function(items){var m={};items.forEach(function(r){m[r.category]=(m[r.category]||0)+(+r.support||0)});
+  return Object.keys(m).map(function(k){return {category:k,support:m[k]}}).sort(function(a,b){return b.support-a.support})}});
+
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function fail(n){n.textContent='';n.appendChild(el('div','fail','Failed to load'))}
+function set(sel,v){var n=document.querySelector(sel);if(n)n.textContent=v}
+
+function chart(items){
+ var host=document.getElementById('rp-chart');host.textContent='';
+ var rows=items.slice().sort(function(a,b){return (+b.support||0)-(+a.support||0)});
+ var W=host.clientWidth||520,rh=34,H=rows.length*rh+4,labW=Math.min(150,W*0.34);
+ var max=d3.max(rows,function(r){return +r.support})||1;
+ var x=d3.scaleLinear([0,max],[0,Math.max(W-labW-70,20)]);
+ var svg=d3.select(host).append('svg').attr('width','100%').attr('viewBox','0 0 '+W+' '+H).style('direction','ltr').style('display','block');
+ var tip=el('div','tip');host.appendChild(tip);
+ rows.forEach(function(r,i){var y=i*rh+2,v=+r.support||0,w=Math.max(x(v),2);
+  svg.append('text').attr('x',W).attr('y',y+rh/2).attr('text-anchor','end').attr('dominant-baseline','middle').attr('fill','currentColor').style('font-size','12px').text(r.short);
+  svg.append('rect').attr('x',W-labW-w).attr('y',y+6).attr('width',w).attr('height',rh-12).attr('rx',4).attr('fill',dash.colors[CATC[r.category]||0])
+   .on('mousemove',function(ev){var b=host.getBoundingClientRect();tip.style.display='block';tip.textContent=r.short+' · '+fmtM(v);tip.style.left=Math.min(Math.max(ev.clientX-b.left-60,0),Math.max(W-200,0))+'px';tip.style.top=(ev.clientY-b.top-36)+'px'})
+   .on('mouseleave',function(){tip.style.display='none'});
+  svg.append('text').attr('x',W-labW-w-6).attr('y',y+rh/2).attr('text-anchor','end').attr('dominant-baseline','middle').attr('fill','currentColor').style('font-size','11px').style('opacity',.7).text(v?compact.format(v):'0');
+ });
+}
+
+function cats(rows){
+ var box=document.getElementById('rp-cats');box.textContent='';
+ var tot=d3.sum(rows,function(r){return +r.support})||1;
+ rows.forEach(function(r){var c=el('div','cat'),h=el('div','row');
+  h.appendChild(el('span','',r.category));
+  h.appendChild(el('b','',fmtM(+r.support)+' · '+fmtP((+r.support)/tot)));
+  c.appendChild(h);var t=el('div','track'),f=el('div','fill');f.style.width=((+r.support)/tot*100)+'%';f.style.background=dash.colors[CATC[r.category]||0];t.appendChild(f);c.appendChild(t);box.appendChild(c)});
+}
+
+function table(items){
+ window.__items=items;
+ var tb=document.querySelector('#rp-table tbody');tb.textContent='';
+ var q=state.q.trim();
+ var rows=items.filter(function(r){return !q||String(r.title).indexOf(q)>-1});
+ rows.sort(function(a,b){var x=a[state.k],y=b[state.k];
+  if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;
+  return (typeof x==='number'?x-y:String(x).localeCompare(String(y),'ar'))*state.dir});
+ if(!rows.length){var tr=el('tr'),td=el('td','','لا توجد نتائج');td.colSpan=6;tr.appendChild(td);tb.appendChild(tr);return}
+ var f=function(v,fn){return v==null?'—':fn(+v)};
+ rows.forEach(function(r){var tr=el('tr');tr.setAttribute('data-key',r.n);
+  tr.appendChild(el('td','num',r.n));tr.appendChild(el('td','',r.title));
+  tr.appendChild(el('td','num',f(r.ops,fmtN)));tr.appendChild(el('td','num',f(r.beneficiaries,fmtN)));
+  tr.appendChild(el('td','num',f(r.support,fmtM)));tr.appendChild(el('td','num',f(r.cost,fmtN)));
+  tb.appendChild(tr)});
+}
+
+document.getElementById('rp-q').addEventListener('input',function(e){state.q=e.target.value;table(window.__items||[])});
+document.querySelectorAll('#rp-table th button').forEach(function(b){b.addEventListener('click',function(){
+ var k=b.getAttribute('data-k');state.dir=state.k===k?-state.dir:(k==='title'||k==='n'?1:-1);state.k=k;table(window.__items||[])})});
+
+dash.onData(function(){
+ var it=dash.data('items'),sm=dash.data('summary'),bc=dash.data('bycat'),inf=dash.data('info');
+ if(it.status!=='ok'){fail(document.getElementById('rp-chart'));fail(document.getElementById('rp-cats'));document.querySelector('#rp-table tbody').textContent='';return}
+ chart(it.data);if(bc.status==='ok')cats(bc.data);else fail(document.getElementById('rp-cats'));
+ table(it.data);
+ if(sm.status==='ok'&&sm.data[0]){var s=sm.data[0];
+  var big=document.querySelectorAll('.rp .tile .big');
+  big[0].textContent=fmtN(Math.round(s.support));big[1].textContent=fmtN(s.ops);big[2].textContent=fmtN(s.beneficiaries);big[3].textContent=fmtN(s.items);
+  document.querySelector('[data-source=summary][data-field=top_short]').textContent=s.top_short;
+  document.querySelector('[data-source=summary][data-field=top_share]').textContent=fmtP(s.top_share);}
+ if(inf.status==='ok'&&inf.data[0]){var m=inf.data[0];
+  document.querySelector('[data-field=report]').textContent=m.report;
+  ['department','date','day','author'].forEach(function(k){var n=document.querySelector('.meta [data-field='+k+']');if(n)n.textContent=m[k]})}
+});
+})();
+
+</script>
+</body>
+</html>
